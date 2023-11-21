@@ -68,5 +68,23 @@ function initiateLoan(uint256 _loanAmount) external onlyNotBorrower {
 
         emit LoanInitiated(msg.sender, _loanAmount, loans[msg.sender].endTime);
     }
+function repayLoan() external {
+        Loan storage loan = loans[msg.sender];
+        require(loan.borrower == msg.sender, "No active loan for the borrower");
+        require(!loan.repaid, "Loan already repaid");
+        require(block.timestamp <= loan.endTime, "Loan has expired");
 
+        uint256 interestAmount = (loan.amount * interestRate * (block.timestamp - loan.startTime)) / (365 * 100);
+        uint256 totalRepayment = loan.amount + interestAmount;
+
+        // Transfer loan tokens from the borrower to the contract
+        loanToken.safeTransferFrom(msg.sender, address(this), totalRepayment);
+
+        // Transfer collateral back to the borrower
+        collateralToken.safeTransfer(msg.sender, loan.amount);
+
+        loan.repaid = true;
+
+        emit LoanRepaid(msg.sender, totalRepayment);
+    }
 }
