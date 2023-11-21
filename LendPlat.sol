@@ -47,6 +47,26 @@ contract DecentralizedLendingPlatform is Ownable {
         loanDuration = _loanDuration;
         interestRate = _interestRate;
     }
+function initiateLoan(uint256 _loanAmount) external onlyNotBorrower {
+        require(_loanAmount > 0, "Loan amount must be greater than 0");
 
+        // Transfer collateral from the borrower to the contract
+        collateralToken.safeTransferFrom(msg.sender, address(this), _loanAmount);
+
+        uint256 interestAmount = (_loanAmount * interestRate * loanDuration) / (365 * 100); // Simple interest calculation
+
+        loans[msg.sender] = Loan({
+            borrower: msg.sender,
+            amount: _loanAmount,
+            startTime: block.timestamp,
+            endTime: block.timestamp + loanDuration,
+            repaid: false
+        });
+
+        // Mint loan tokens to the borrower
+        loanToken.safeTransfer(msg.sender, _loanAmount - interestAmount);
+
+        emit LoanInitiated(msg.sender, _loanAmount, loans[msg.sender].endTime);
+    }
 
 }
