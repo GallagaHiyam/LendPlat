@@ -87,4 +87,9 @@ function repayLoan() external {
 
         emit LoanRepaid(msg.sender, totalRepayment);
     }
+function getLoanDetails(address _borrower) external view returns (uint256, uint256, uint256, bool) {
+        Loan storage loan = loans[_borrower];
+        return (loan.amount, loan.startTime, loan.endTime, loan.repaid);
+    }
+
 }
